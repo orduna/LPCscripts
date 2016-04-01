@@ -1,0 +1,9 @@
+# ignore non-text files
+*.gif
+*.jpg
+*.mov
+*.pdf
+*.png
+*.ppt
+*.pptx
+*.zip

@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+#  eosdu
+#
+#  Created by Jesus Orduna on 3/9/16.
+#
+
+# This will sum the size of all content inside the LFN and return the number in B
+# or an empty string for empty directories
+function getSizeOf {
+    for theDir in `eos root://cmseos.fnal.gov find $1 | awk '{print $0" "substr($0,length,1)}' | grep \ / | cut -d \  -f1` ; do
+        eos root://cmseos.fnal.gov ls -l $theDir
+    done | awk '{ sum+=$5} END {print sum}'
+}
+
+# Get the size of the LFN
+theSize=`getSizeOf $1`
+
+# Empty directories will evaluate true
+if [ "a$theSize" = "a" ] ; then
+    echo "Empty"
+else
+    # Non-empty directories with content adding zero-size will evaluate true
+    # need to be filtered as log($theSize) will complain
+    if [ "$theSize" -eq "0" ] ; then
+        echo "0 B"
+    else
+        # Compute an index to refer to B, kB, MB, GB or TB
+        declare -a thePrefix=( [0]="" [1]="k"  [2]="M" [3]="G" [4]="T")
+        theIndex=`awk "BEGIN {print int(log($theSize)/(10*log(2)))}"`
+
+        echo "$theSize $theIndex ${thePrefix[$theIndex]}B" | awk '{print $1/(2^(10*$2)),$3}'
+     fi
+fi
+
+echo "`whoami`,$1" >> /uscms/home/jjesus/theEOSDUUsage.log
